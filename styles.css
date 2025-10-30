@@ -6,9 +6,7 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #f8f9fa;
-    color: #333;
-    line-height: 1.6;
+    background-color: #f0f8ff;
     padding: 20px;
 }
 
@@ -21,110 +19,58 @@ header {
     text-align: center;
     margin-bottom: 30px;
     padding: 20px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: #4CAF50;
     color: white;
     border-radius: 10px;
 }
 
 header h1 {
-    font-size: 2.5rem;
+    font-size: 2rem;
     margin-bottom: 10px;
 }
 
 .controls {
     display: flex;
-    gap: 15px;
+    gap: 10px;
     margin-bottom: 20px;
-    flex-wrap: wrap;
 }
 
 #busca {
     flex: 1;
-    padding: 12px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    min-width: 250px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }
 
 button {
-    padding: 12px 24px;
-    background: #28a745;
+    padding: 10px 20px;
+    background: #2196F3;
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
-}
-
-button:hover {
-    background: #218838;
-}
-
-.info {
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
     background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-top: 20px;
 }
 
 th, td {
-    padding: 15px;
+    padding: 12px;
     text-align: left;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #ddd;
 }
 
 th {
-    background: #343a40;
+    background: #333;
     color: white;
-    font-weight: bold;
-}
-
-tr:hover {
-    background-color: #f8f9fa;
 }
 
 #carregando {
     text-align: center;
-    padding: 40px;
+    padding: 20px;
     font-size: 18px;
-    color: #666;
-}
-
-#sem-produtos {
-    text-align: center;
-    padding: 40px;
-    font-size: 18px;
-    color: #666;
-    background: white;
-    border-radius: 8px;
-}
-
-/* Responsivo */
-@media (max-width: 768px) {
-    .controls {
-        flex-direction: column;
-    }
-    
-    #busca {
-        min-width: auto;
-    }
-    
-    table {
-        font-size: 14px;
-    }
-    
-    th, td {
-        padding: 10px 8px;
-    }
 }
