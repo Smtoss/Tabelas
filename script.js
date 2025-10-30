@@ -3,18 +3,22 @@ let produtos = [];
 
 // Função principal para carregar os produtos
 async function carregarProdutos() {
-    console.log('Iniciando carregamento...');
+    console.log('🔍 Tentando carregar cremoso.csv...');
     
     try {
         // Buscar o arquivo CSV
         const resposta = await fetch('cremoso.csv');
-        const textoCSV = await resposta.text();
         
-        console.log('CSV carregado:', textoCSV.substring(0, 200));
+        if (!resposta.ok) {
+            throw new Error(`Arquivo não encontrado! Status: ${resposta.status}`);
+        }
+        
+        const textoCSV = await resposta.text();
+        console.log('✅ CSV carregado com sucesso!');
         
         // Converter CSV para array de objetos
         const linhas = textoCSV.split('\n');
-        console.log('Total de linhas:', linhas.length);
+        console.log('📊 Total de linhas no CSV:', linhas.length);
         
         produtos = [];
         
@@ -23,7 +27,6 @@ async function carregarProdutos() {
             if (linhas[i].trim() === '') continue;
             
             const colunas = linhas[i].split(';');
-            console.log('Linha', i, 'colunas:', colunas);
             
             if (colunas.length >= 6) {
                 // Corrigir o preço - remover espaços e converter
@@ -39,8 +42,6 @@ async function carregarProdutos() {
                     subgrupo: colunas[5].trim()
                 };
                 
-                console.log('Produto processado:', produto);
-                
                 // Só adiciona se tiver descrição
                 if (produto.descricao && produto.descricao !== 'DESCRICAO') {
                     produtos.push(produto);
@@ -48,13 +49,16 @@ async function carregarProdutos() {
             }
         }
         
-        console.log('Produtos carregados:', produtos);
+        console.log(`🎉 ${produtos.length} produtos carregados!`);
         exibirProdutos();
         
     } catch (erro) {
-        console.error('Erro ao carregar produtos:', erro);
-        document.getElementById('corpo-tabela').innerHTML = 
-            '<tr><td colspan="6" style="text-align: center; color: red;">Erro ao carregar produtos: ' + erro.message + '</td></tr>';
+        console.error('❌ Erro ao carregar produtos:', erro);
+        document.getElementById('carregando').innerHTML = 
+            '<div style="color: red; text-align: center; padding: 20px;">' +
+            '❌ Arquivo cremoso.csv não encontrado!<br>' +
+            'Verifique se o arquivo foi enviado para o GitHub.' +
+            '</div>';
     }
 }
 
@@ -63,7 +67,7 @@ function exibirProdutos() {
     const corpoTabela = document.getElementById('corpo-tabela');
     
     if (produtos.length === 0) {
-        corpoTabela.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum produto encontrado</td></tr>';
+        corpoTabela.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum produto carregado</td></tr>';
         return;
     }
     
@@ -81,6 +85,10 @@ function exibirProdutos() {
     
     // Esconder carregando
     document.getElementById('carregando').style.display = 'none';
+    
+    // Atualizar contador
+    document.getElementById('total-produtos').textContent = 
+        `${produtos.length} produto${produtos.length !== 1 ? 's' : ''} carregado${produtos.length !== 1 ? 's' : ''}`;
 }
 
 // Função para buscar produtos
@@ -89,6 +97,7 @@ function buscarProdutos() {
     const corpoTabela = document.getElementById('corpo-tabela');
     
     if (termo === '') {
+        // Mostrar todos os produtos
         corpoTabela.innerHTML = produtos.map(produto => `
             <tr>
                 <td>${produto.codigo}</td>
@@ -100,9 +109,11 @@ function buscarProdutos() {
             </tr>
         `).join('');
     } else {
+        // Filtrar produtos
         const filtrados = produtos.filter(produto => 
             produto.descricao.toLowerCase().includes(termo) ||
-            produto.codigo.toLowerCase().includes(termo)
+            produto.codigo.toLowerCase().includes(termo) ||
+            produto.grupo.toLowerCase().includes(termo)
         );
         
         corpoTabela.innerHTML = filtrados.map(produto => `
@@ -115,8 +126,18 @@ function buscarProdutos() {
                 <td>${produto.subgrupo}</td>
             </tr>
         `).join('');
+        
+        // Atualizar contador
+        document.getElementById('total-produtos').textContent = 
+            `${filtrados.length} produto${filtrados.length !== 1 ? 's' : ''} encontrado${filtrados.length !== 1 ? 's' : ''}`;
     }
 }
 
-// Carregar produtos quando a página abrir
-carregarProdutos();
+// Configurar eventos quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    // Carregar produtos automaticamente
+    carregarProdutos();
+    
+    // Configurar busca em tempo real
+    document.getElementById('busca').addEventListener('input', buscarProdutos);
+});
