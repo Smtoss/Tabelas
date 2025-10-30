@@ -98,7 +98,7 @@ function exibirProdutos() {
         `${produtos.length} produto${produtos.length !== 1 ? 's' : ''} carregado${produtos.length !== 1 ? 's' : ''}`;
 }
 
-// FUNÇÃO DE BUSCA MELHORADA - COM MÚLTIPLAS PALAVRAS
+// FUNÇÃO DE BUSCA CORRIGIDA - SOMENTE NO CAMPO DESCRIÇÃO
 function buscarProdutos() {
     const termo = document.getElementById('busca').value.toLowerCase().trim();
     const corpoTabela = document.getElementById('corpo-tabela');
@@ -137,16 +137,13 @@ function buscarProdutos() {
             return;
         }
         
-        // BUSCA COM MÚLTIPLAS PALAVRAS - TODAS as palavras devem estar presentes
+        // BUSCA COM MÚLTIPLAS PALAVRAS - SOMENTE NO CAMPO DESCRIÇÃO
         const filtrados = produtos.filter(produto => {
-            // Verificar se TODAS as palavras estão presentes em qualquer campo
+            const descricaoLower = produto.descricao.toLowerCase();
+            
+            // Verificar se TODAS as palavras estão presentes na DESCRIÇÃO
             return palavras.every(palavra => {
-                return (
-                    produto.descricao.toLowerCase().includes(palavra) ||
-                    produto.codigo.toLowerCase().includes(palavra) ||
-                    produto.grupo.toLowerCase().includes(palavra) ||
-                    produto.subgrupo.toLowerCase().includes(palavra)
-                );
+                return descricaoLower.includes(palavra);
             });
         });
         
@@ -159,9 +156,9 @@ function buscarProdutos() {
                 </tr>
             `;
         } else {
-            // Destacar TODAS as palavras buscadas nos resultados
+            // CORREÇÃO: Manter a descrição original para busca, só destacar na exibição
             corpoTabela.innerHTML = filtrados.map(produto => {
-                // Função para destacar múltiplas palavras
+                // Função para destacar múltiplas palavras (APENAS NA EXIBIÇÃO)
                 const destacarMultiplosTextos = (texto) => {
                     let resultado = texto;
                     palavras.forEach(palavra => {
@@ -173,12 +170,12 @@ function buscarProdutos() {
                 
                 return `
                     <tr>
-                        <td>${destacarMultiplosTextos(produto.codigo)}</td>
+                        <td>${produto.codigo}</td>
                         <td><strong>${destacarMultiplosTextos(produto.descricao)}</strong></td>
                         <td>${produto.unidade}</td>
                         <td style="color: #28a745; font-weight: bold;">R$ ${produto.preco.toFixed(2)}</td>
-                        <td>${destacarMultiplosTextos(produto.grupo)}</td>
-                        <td>${destacarMultiplosTextos(produto.subgrupo)}</td>
+                        <td>${produto.grupo}</td>
+                        <td>${produto.subgrupo}</td>
                     </tr>
                 `;
             }).join('');
@@ -203,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('busca').focus();
     
     // Adicionar placeholder com exemplo
-    document.getElementById('busca').placeholder = '🔍 Ex: aba 12l tra (busca por múltiplas palavras)';
+    document.getElementById('busca').placeholder = '🔍 Ex: aba vin (busca por partes na descrição)';
 });
 
 // Adicionar CSS para o destaque
@@ -224,12 +221,6 @@ estilo.textContent = `
         border-color: #4CAF50;
         box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
         outline: none;
-    }
-    
-    .info-busca {
-        font-size: 12px;
-        color: #666;
-        margin-top: 5px;
     }
 `;
 document.head.appendChild(estilo);
