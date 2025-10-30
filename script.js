@@ -1,6 +1,11 @@
 // Array para armazenar os produtos
 let produtos = [];
 
+// Função para remover acentos
+function removerAcentos(texto) {
+    return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 // Função principal para carregar os produtos
 async function carregarProdutos() {
     console.log('🔍 Carregando produtos...');
@@ -98,9 +103,9 @@ function exibirProdutos() {
         `${produtos.length} produto${produtos.length !== 1 ? 's' : ''} carregado${produtos.length !== 1 ? 's' : ''}`;
 }
 
-// FUNÇÃO DE BUSCA CORRIGIDA - SOMENTE NO CAMPO DESCRIÇÃO
+// FUNÇÃO DE BUSCA CORRIGIDA - REMOVENDO ACENTOS
 function buscarProdutos() {
-    const termo = document.getElementById('busca').value.toLowerCase().trim();
+    const termo = document.getElementById('busca').value.trim();
     const corpoTabela = document.getElementById('corpo-tabela');
     
     if (termo === '') {
@@ -119,10 +124,12 @@ function buscarProdutos() {
         document.getElementById('total-produtos').textContent = 
             `${produtos.length} produto${produtos.length !== 1 ? 's' : ''}`;
     } else {
-        // DIVIDIR EM MÚLTIPLAS PALAVRAS (separadas por espaço)
-        const palavras = termo.split(' ').filter(palavra => palavra.length >= 3);
+        // DIVIDIR EM MÚLTIPLAS PALAVRAS (separadas por espaço) e REMOVER ACENTOS
+        const palavras = termo.split(' ')
+            .filter(palavra => palavra.length >= 3)
+            .map(palavra => removerAcentos(palavra.toLowerCase()));
         
-        console.log('Palavras para buscar:', palavras);
+        console.log('Palavras para buscar (sem acentos):', palavras);
         
         if (palavras.length === 0) {
             // Se todas as palavras têm menos de 3 caracteres, mostrar mensagem
@@ -137,13 +144,14 @@ function buscarProdutos() {
             return;
         }
         
-        // BUSCA COM MÚLTIPLAS PALAVRAS - SOMENTE NO CAMPO DESCRIÇÃO
+        // BUSCA COM MÚLTIPLAS PALAVRAS - REMOVENDO ACENTOS DA DESCRIÇÃO TAMBÉM
         const filtrados = produtos.filter(produto => {
-            const descricaoLower = produto.descricao.toLowerCase();
+            // Remover acentos da descrição para comparar
+            const descricaoSemAcentos = removerAcentos(produto.descricao.toLowerCase());
             
-            // Verificar se TODAS as palavras estão presentes na DESCRIÇÃO
+            // Verificar se TODAS as palavras estão presentes na DESCRIÇÃO (sem acentos)
             return palavras.every(palavra => {
-                return descricaoLower.includes(palavra);
+                return descricaoSemAcentos.includes(palavra);
             });
         });
         
@@ -151,19 +159,46 @@ function buscarProdutos() {
             corpoTabela.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align: center; color: #666;">
-                        🔍 Nenhum produto encontrado para "<strong>${palavras.join(' ')}</strong>"
+                        🔍 Nenhum produto encontrado para "<strong>${termo}</strong>"
                     </td>
                 </tr>
             `;
         } else {
-            // CORREÇÃO: Manter a descrição original para busca, só destacar na exibição
+            // Destacar as palavras nos resultados (considerando acentos originais)
             corpoTabela.innerHTML = filtrados.map(produto => {
-                // Função para destacar múltiplas palavras (APENAS NA EXIBIÇÃO)
+                // Função para destacar múltiplas palavras (considerando que o usuário pode ter digitado com ou sem acento)
                 const destacarMultiplosTextos = (texto) => {
                     let resultado = texto;
-                    palavras.forEach(palavra => {
-                        const regex = new RegExp(`(${palavra})`, 'gi');
-                        resultado = resultado.replace(regex, '<mark>$1</mark>');
+                    palavras.forEach(palavraBusca => {
+                        // Criar regex que encontra a palavra com possíveis acentos
+                        // Ex: se buscou "acai", destaca "açaí", "acai", etc.
+                        const textoSemAcentos = removerAcentos(texto.toLowerCase());
+                        const indices = [];
+                        let index = textoSemAcentos.indexOf(palavraBusca);
+                        
+                        while (index !== -1) {
+                            indices.push(index);
+                            index = textoSemAcentos.indexOf(palavraBusca, index + 1);
+                        }
+                        
+                        // Destacar no texto original
+                        if (indices.length > 0) {
+                            let novoTexto = '';
+                            let ultimoIndex = 0;
+                            
+                            indices.forEach(idx => {
+                                // Adicionar parte não destacada
+                                novoTexto += texto.substring(ultimoIndex, idx);
+                                // Adicionar parte destacada
+                                const comprimentoOriginal = texto.substring(idx, idx + palavraBusca.length).length;
+                                novoTexto += '<mark>' + texto.substring(idx, idx + comprimentoOriginal) + '</mark>';
+                                ultimoIndex = idx + comprimentoOriginal;
+                            });
+                            
+                            // Adicionar resto do texto
+                            novoTexto += texto.substring(ultimoIndex);
+                            resultado = novoTexto;
+                        }
                     });
                     return resultado;
                 };
@@ -182,7 +217,7 @@ function buscarProdutos() {
         }
         
         // Atualizar contador
-        const palavrasTexto = palavras.length > 1 ? `palavras "${palavras.join(' ')}"` : `"${palavras[0]}"`;
+        const palavrasTexto = palavras.length > 1 ? `palavras "${termo}"` : `"${termo}"`;
         document.getElementById('total-produtos').textContent = 
             `${filtrados.length} produto${filtrados.length !== 1 ? 's' : ''} encontrado${filtrados.length !== 1 ? 's' : ''} para ${palavrasTexto}`;
     }
@@ -200,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('busca').focus();
     
     // Adicionar placeholder com exemplo
-    document.getElementById('busca').placeholder = '🔍 Ex: aba vin (busca por partes na descrição)';
+    document.getElementById('busca').placeholder = '🔍 Ex: acai ou limao (busca ignora acentos)';
 });
 
 // Adicionar CSS para o destaque
