@@ -27,7 +27,6 @@ async function carregarProdutos() {
             if (linhas[i].trim() === '') continue;
             
             const colunas = linhas[i].split(';');
-            console.log('Linha', i, 'colunas:', colunas.length);
             
             // Verificar se tem colunas suficientes
             if (colunas.length >= 11) {
@@ -36,7 +35,6 @@ async function carregarProdutos() {
                 
                 // Extrair preço da coluna 10 (VL-UNIT)
                 let precoTexto = colunas[10].trim();
-                console.log('Preço texto:', precoTexto);
                 
                 // Converter preço - remover espaços e trocar vírgula por ponto
                 let preco = parseFloat(precoTexto.replace(',', '.').replace(/\s/g, '')) || 0;
@@ -50,14 +48,10 @@ async function carregarProdutos() {
                     subgrupo: colunas[16].trim()       // DES.SUBGRUPO está na coluna 16
                 };
                 
-                console.log('Produto processado:', produto);
-                
                 // Só adiciona se tiver descrição e não for cabeçalho
                 if (produto.descricao && produto.descricao !== 'DESCRIÇÃO') {
                     produtos.push(produto);
                 }
-            } else {
-                console.log('Linha ignorada - poucas colunas:', colunas.length);
             }
         }
         
@@ -104,13 +98,13 @@ function exibirProdutos() {
         `${produtos.length} produto${produtos.length !== 1 ? 's' : ''} carregado${produtos.length !== 1 ? 's' : ''}`;
 }
 
-// Função para buscar produtos
+// FUNÇÃO DE BUSCA MELHORADA - COM "LIKE" PARA PARTE DO NOME
 function buscarProdutos() {
-    const termo = document.getElementById('busca').value.toLowerCase();
+    const termo = document.getElementById('busca').value.toLowerCase().trim();
     const corpoTabela = document.getElementById('corpo-tabela');
     
     if (termo === '') {
-        // Mostrar todos os produtos
+        // Mostrar todos os produtos se busca estiver vazia
         corpoTabela.innerHTML = produtos.map(produto => `
             <tr>
                 <td>${produto.codigo}</td>
@@ -125,28 +119,52 @@ function buscarProdutos() {
         document.getElementById('total-produtos').textContent = 
             `${produtos.length} produto${produtos.length !== 1 ? 's' : ''}`;
     } else {
-        // Filtrar produtos
-        const filtrados = produtos.filter(produto => 
-            produto.descricao.toLowerCase().includes(termo) ||
-            produto.codigo.toLowerCase().includes(termo) ||
-            produto.grupo.toLowerCase().includes(termo) ||
-            produto.subgrupo.toLowerCase().includes(termo)
-        );
+        // BUSCA COM "LIKE" - encontra qualquer parte do texto
+        const filtrados = produtos.filter(produto => {
+            // Verificar em cada campo se contém o termo de busca
+            return (
+                produto.descricao.toLowerCase().includes(termo) ||
+                produto.codigo.toLowerCase().includes(termo) ||
+                produto.grupo.toLowerCase().includes(termo) ||
+                produto.subgrupo.toLowerCase().includes(termo)
+            );
+        });
         
-        corpoTabela.innerHTML = filtrados.map(produto => `
-            <tr>
-                <td>${produto.codigo}</td>
-                <td><strong>${produto.descricao}</strong></td>
-                <td>${produto.unidade}</td>
-                <td style="color: #28a745; font-weight: bold;">R$ ${produto.preco.toFixed(2)}</td>
-                <td>${produto.grupo}</td>
-                <td>${produto.subgrupo}</td>
-            </tr>
-        `).join('');
+        if (filtrados.length === 0) {
+            corpoTabela.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #666;">
+                        🔍 Nenhum produto encontrado para "<strong>${termo}</strong>"
+                    </td>
+                </tr>
+            `;
+        } else {
+            // Destacar o termo buscado nos resultados
+            corpoTabela.innerHTML = filtrados.map(produto => {
+                // Função para destacar o texto encontrado
+                const destacarTexto = (texto) => {
+                    if (!termo) return texto;
+                    
+                    const regex = new RegExp(`(${termo})`, 'gi');
+                    return texto.replace(regex, '<mark>$1</mark>');
+                };
+                
+                return `
+                    <tr>
+                        <td>${destacarTexto(produto.codigo)}</td>
+                        <td><strong>${destacarTexto(produto.descricao)}</strong></td>
+                        <td>${produto.unidade}</td>
+                        <td style="color: #28a745; font-weight: bold;">R$ ${produto.preco.toFixed(2)}</td>
+                        <td>${destacarTexto(produto.grupo)}</td>
+                        <td>${destacarTexto(produto.subgrupo)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
         
         // Atualizar contador
         document.getElementById('total-produtos').textContent = 
-            `${filtrados.length} produto${filtrados.length !== 1 ? 's' : ''} encontrado${filtrados.length !== 1 ? 's' : ''}`;
+            `${filtrados.length} produto${filtrados.length !== 1 ? 's' : ''} encontrado${filtrados.length !== 1 ? 's' : ''} para "${termo}"`;
     }
 }
 
@@ -157,4 +175,29 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configurar busca em tempo real
     document.getElementById('busca').addEventListener('input', buscarProdutos);
+    
+    // Focar no campo de busca automaticamente
+    document.getElementById('busca').focus();
 });
+
+// Adicionar CSS para o destaque
+const estilo = document.createElement('style');
+estilo.textContent = `
+    mark {
+        background-color: #ffeb3b;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+    
+    #busca {
+        transition: all 0.3s ease;
+    }
+    
+    #busca:focus {
+        border-color: #4CAF50;
+        box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+        outline: none;
+    }
+`;
+document.head.appendChild(estilo);
