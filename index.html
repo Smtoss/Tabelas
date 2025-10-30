@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Produtos Cremoso</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍦 Produtos Cremoso</h1>
+            <p>Catálogo atualizado de produtos</p>
+        </header>
+
+        <div class="controls">
+            <input type="text" id="busca" placeholder="🔍 Buscar produtos..." />
+            <button onclick="carregarProdutos()">🔄 Atualizar</button>
+        </div>
+
+        <div class="info">
+            <span id="total-produtos">Carregando...</span>
+        </div>
+
+        <div id="tabela-produtos">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descrição</th>
+                        <th>Unidade</th>
+                        <th>Preço</th>
+                        <th>Grupo</th>
+                        <th>Subgrupo</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-tabela">
+                    <!-- Os produtos aparecerão aqui -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="carregando">📥 Carregando produtos...</div>
+        <div id="sem-produtos" style="display: none;">😞 Nenhum produto encontrado.</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
